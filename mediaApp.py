@@ -294,7 +294,7 @@ class mediaApp:
                 'end':end
                 }
         folder_list_request = requests.get(folder_list_url, params=folder_list_payload, auth=self.authentication)
-        return (folder_list_request.text)
+        return (folder_list_request)
 
 
     # add subfolder for parent

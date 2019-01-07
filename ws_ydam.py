@@ -74,11 +74,10 @@ class ws_ydam:
    
     def createYdamFolders(self, pathList, conta, parentFolderId, ydamConfig):        
         try:
-            folder_list_request = self.instance.instancelistFoldersForParentFolder(parentFolderId, start = 0, end = 1000)
+            folder_list_request = self.instance.listFoldersForParentFolder(parentFolderId, start = 0, end = 1000)
         except Exception as e: 
             print("Eccezione folder_add: " + str(e))
-        folders_list = json.loads(folder_list_request.text)
-
+        folders_list = json.loads(folder_list_request)
         fTitles=[]
         fIds=[]
         for folder in folders_list:
@@ -89,8 +88,8 @@ class ws_ydam:
 
         df=pandas.DataFrame({'Ids': fIds, 'Titles': fTitles})
     
-        print("conta:",conta)
-        print(df)
+#        print("conta:",conta)
+#        print(df)
         esiste=False
         if not df.empty:
             df_selected=df.loc[df['Titles'] == pathList[conta]]
@@ -98,46 +97,36 @@ class ws_ydam:
                 esiste=True
 
         if conta<len(pathList):
-            print("pathList[conta]=",pathList[conta])
+#            print("pathList[conta]=",pathList[conta])
             if esiste:            
                 lastFolderId=df_selected.iloc[0]['Ids']
                 conta += 1
                 return self.createYdamFolders(pathList,conta,lastFolderId,ydamConfig)                
             else:               
-                print ('\nadd subfolder for ',parentFolderId) 
+#                print ('\nadd subfolder for ',parentFolderId) 
                 try:
-                    folder_add_request = self.instance.addSubfolderForParent(parentFolderId, '{"it_IT":"' + pathList[conta] + '"}', '{"it_IT":"' + pathList[conta] + '"}', '')
+                    folderId = self.instance.addSubfolderForParent(parentFolderId, '{"it_IT":"' + pathList[conta] + '"}', '{"it_IT":"' + pathList[conta] + '"}', '')
                 except Exception as e: 
                     print("Eccezione folder_add: " + str(e))
-                folder = json.loads(folder_add_request.text)
-                folderId = folder["folderId"]         
-                print ('New folderId: ',folderId) 
                 lastFolderId=folderId
                 conta += 1
                 return self.createYdamFolders(pathList,conta,lastFolderId,ydamConfig)
         else:
-            print("fuori",conta,len(pathList))
+#            print("fuori",conta,len(pathList))
             return parentFolderId
 
 
     def sendFileToYdam(self, folderId,fileName,Title,Description,ydamConfig):
         self.instance.setFolderId(folderId)
         try:
-            entry_add_request = self.instance.addEntry('', '{"it_IT":"' + Title + '"}', '{"it_IT":"'+Description+'"}', '')
+            entryId = self.instance.addEntry('', '{"it_IT":"' + Title + '"}', '{"it_IT":"'+Description+'"}', '')
         except Exception as e:
             print("Eccezione entry_add: " + str(e))
-        
-        entry = json.loads(entry_add_request.text)
-        entryId = entry["entryId"]
         try:
-            file_add_request = self.instance.addFile(entryId,'true')
+            fileId = self.instance.addFile(entryId,'true')
         except Exception as e: 
             print("Eccezione file_add: " + str(e))
-
-        entry_file = json.loads(file_add_request.text)
-        fileId = entry_file["fileId"]
-        print ('upload content to file ',entry_file["fileId"]) 
-
+#        print ('upload content to file ',fileId) 
         try:
             file_upload_request =  self.instance.uploadFile(fileId, fileName)
         except Exception as e: 
